@@ -1,0 +1,19 @@
+<component name="libraryTable">
+  <library name="bcprov-jdk15on-1.60">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/lib/bcprov-jdk15on-1.60.jar!/" />
+      <root url="jar://$PROJECT_DIR$/lib/commons-lang3-3.8.1.jar!/" />
+      <root url="jar://$PROJECT_DIR$/lib/commons-logging-1.2.jar!/" />
+      <root url="jar://$PROJECT_DIR$/lib/filters-2.0.235.jar!/" />
+      <root url="jar://$PROJECT_DIR$/lib/hsqldb-2.3.1.jar!/" />
+      <root url="jar://$PROJECT_DIR$/lib/jackcess-3.0.0.jar!/" />
+      <root url="jar://$PROJECT_DIR$/lib/jackcess-encrypt-3.0.0.jar!/" />
+      <root url="jar://$PROJECT_DIR$/lib/swing-worker-1.1.jar!/" />
+      <root url="jar://$PROJECT_DIR$/lib/swingx-1.6.1.jar!/" />
+      <root url="jar://$PROJECT_DIR$/lib/ucanaccess-4.0.1.jar!/" />
+      <root url="jar://$PROJECT_DIR$/lib/liquidlnf.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>
