@@ -12,14 +12,11 @@ import java.awt.HeadlessException;
 import java.awt.Image;
 import java.awt.MediaTracker;
 import java.awt.Toolkit;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.sql.*;
-import java.util.List;
 import java.util.Objects;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -27,11 +24,9 @@ import java.util.logging.Logger;
 import daoFactory.DaoFactory;
 import daoFactory.DatabaseConnection;
 import daoFactory.UserController;
-import daoFactory.UserDaoQueryImpl;
 import listener.WindowEventHandler;
 import model.User;
 import utils.Utils;
-import views.listener.MySqlListener;
 
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
@@ -50,23 +45,25 @@ public class OpenAccount extends JFrame {
 
     private JPanel jPanel;
     private JButton btnBackToMain, btnSave;
-    private JLabel lblFirstName, lblLastName, lblPhoneNumber, lblAccountType, lblPin;
+    protected JLabel lblPhoneNumber;
     private JTextField txtFirstName, txtLastName, txtPhoneNumber;
     private JComboBox<String> jcmbAccountType;
     private String[] account = {"Saving", "Current", "Fixed"};
-    private JLabel lblAccountNumber;
     private JTextField txtAccountNumber;
-    private String accounNumber;
     private JButton btnClear;
     private JButton btnSearch;
     private JPasswordField txtPin;
     private JButton btnCancel;
+    //private WindowEventHandler mHandler = new WindowEventHandler();
 
 
     public OpenAccount() throws HeadlessException {
         displayGUI();
         registerListener();
     }
+
+
+
 
 
     private void displayGUI() {
@@ -125,7 +122,7 @@ public class OpenAccount extends JFrame {
         btnSearch.setToolTipText("Search customer with phone Number");
         jPanel.add(btnSearch).setBounds(480, 50, 60, 50);
 
-        lblPin = new JLabel("<html><b>Enter four digit pin....");
+        JLabel lblPin = new JLabel("<html><b>Enter four digit pin....");
         lblPin.setForeground(Color.red);
         lblPin.setFont(new Font("Times New Roman", Font.ITALIC, 18));
         jPanel.add(lblPin).setBounds(180, 45, 180, 50);
@@ -152,7 +149,7 @@ public class OpenAccount extends JFrame {
         });
 
 
-        lblFirstName = new JLabel("<html><b>First Name");
+        JLabel lblFirstName = new JLabel("<html><b>First Name");
         lblFirstName.setFont(new Font("Times New Roman", Font.ITALIC, 15));
         lblFirstName.setForeground(Color.white);
         jPanel.add(lblFirstName).setBounds(10, 100, 160, 40);
@@ -164,7 +161,7 @@ public class OpenAccount extends JFrame {
         jPanel.add(txtFirstName).setBounds(160, 105, 300, 25);
 
 
-        lblLastName = new JLabel("<html><b>Last Name|Surname");
+        JLabel lblLastName = new JLabel("<html><b>Last Name|Surname");
         lblLastName.setFont(new Font("Times New Roman", Font.ITALIC, 15));
         lblLastName.setForeground(Color.white);
         jPanel.add(lblLastName).setBounds(10, 140, 160, 40);
@@ -203,7 +200,7 @@ public class OpenAccount extends JFrame {
         jPanel.add(txtPhoneNumber).setBounds(160, 185, 300, 25);
 
 
-        lblAccountNumber = new JLabel("<html><b>Account Number");
+        JLabel lblAccountNumber = new JLabel("<html><b>Account Number");
         lblAccountNumber.setFont(new Font("Times New Roman", Font.ITALIC, 15));
         lblAccountNumber.setForeground(Color.white);
         jPanel.add(lblAccountNumber).setBounds(10, 220, 160, 40);
@@ -215,7 +212,7 @@ public class OpenAccount extends JFrame {
         jPanel.add(txtAccountNumber).setBounds(160, 225, 300, 25);
 
 
-        lblAccountType = new JLabel("<html><b>Account Type");
+        JLabel lblAccountType = new JLabel("<html><b>Account Type");
         lblAccountType.setFont(new Font("Times New Roman", Font.ITALIC, 15));
         lblAccountType.setForeground(Color.white);
         jPanel.add(lblAccountType).setBounds(10, 260, 160, 40);
@@ -278,6 +275,17 @@ public class OpenAccount extends JFrame {
             String buttonName = e.getActionCommand();
 
             if (!buttonName.equalsIgnoreCase("save")) {
+                btnSave.setEnabled(true);
+                System.out.println("update");
+                try {
+                    String result = UserController.getInstance().updateOpenAccount(txtFirstName.getText(),txtLastName.getText(),
+                    Objects.requireNonNull(jcmbAccountType.getSelectedItem()).toString(),txtPhoneNumber.getText());
+                    System.out.println(result);
+                    clearTextImpl();
+                } catch (SQLException e1) {
+                    e1.printStackTrace();
+                }
+
                 return;
             }
             if (textValidation()) {
@@ -299,9 +307,11 @@ public class OpenAccount extends JFrame {
                     user.setAccountType(accountType);
 
                     UserController.getInstance().save(user);
-                    saveCopyToAmountDepositedTable(user.getPhoneNumber(),String.valueOf(user.getSecretPin()));
-                    JOptionPane.showMessageDialog(this, "Save Successfully!\nYour Account Number: " + user.getAccountNumber());
-                    clearTextImpl();
+                    if(saveCopyToAmountDepositedTable(user.getPhoneNumber(), String.valueOf(user.getSecretPin()))){
+                        JOptionPane.showMessageDialog(this, "Save Successfully!\nYour Account Number: " + user.getAccountNumber());
+                        clearTextImpl();
+                    }
+
                 } catch (SQLException e1) {
                     JOptionPane.showMessageDialog(null, "" + e1.getMessage());
                     e1.printStackTrace();
@@ -310,18 +320,15 @@ public class OpenAccount extends JFrame {
 
         });
         btnCancel.addActionListener(e -> {
-            System.exit(0);
+            super.setVisible(false);
+            WindowEventHandler.getInstance().homePageWindowOpen();
         });
         btnClear.addActionListener(e -> {
             clearTextImpl();
         });
         btnBackToMain.addActionListener(e -> {
             super.setVisible(false);
-            Homepage homepage = new Homepage();
-            homepage.setSize(560, 430);
-            homepage.setResizable(false);
-            homepage.setVisible(true);
-            // WindowEventHandler.getInstance().homePageWindowOpen();
+          WindowEventHandler.getInstance().homePageWindowOpen();
         });
         btnSearch.addActionListener(e -> {
             searchUser();
@@ -330,130 +337,17 @@ public class OpenAccount extends JFrame {
 
     }
 
-    private boolean verifyPhoneNumber(String number) {
-        boolean flag = true;
-        if (number.length() != 11) {
-            JOptionPane.showMessageDialog(null, "Invalid Number,must be 11 digit");
-            flag = false;
-        }
-        return flag;
-    }
-
-    private boolean isFieldEmpty() {
-        boolean flag = true;
-        String fName, lastName, number, pin;
-        fName = txtFirstName.getText();
-        lastName = txtLastName.getText();
-        number = txtPhoneNumber.getText();
-        char[] pinChar = txtPin.getPassword();
-        pin = new String(pinChar);
-
-        if (fName.length() == 0 || lastName.length() == 0 || number.length() == 0 || pin.length() == 0) {
-            JOptionPane.showMessageDialog(null, "Fill all editable fields");
-
-            flag = false;
-        }
-        return flag;
-    }
-
-//    private void userInDatabase() {
-//        boolean flag;
-//        try {
-//            String query = "SELECT * FROM accountopening order by fname";
-//
-//            ResultSet resultSet;
-//            Statement statement = databaseConnection.getStatement();
-//            resultSet = statement.executeQuery(query);
-//
-//            if (!resultSet.next()) {
-//                System.out.println("No data");
-//
-//            } else {
-//
-//                // System.out.println("continue");
-//                String firstName, lastName, phoneNumber, accountType;
-//                firstName = txtFirstName.getText();
-//                lastName = txtLastName.getText();
-//                phoneNumber = txtPhoneNumber.getText();
-//                accountType = jcmbAccountType.getSelectedItem().toString();
-//                // System.out.println("fname"+firstName +"lname "+lastName+ "phone number "+phoneNumber+"account type "+accountType);
-//
-//
-//                String fname = resultSet.getString("fname").trim();
-//                String lname = resultSet.getString("lname").trim();
-//                String atype = resultSet.getString("atype").trim();
-//                String num = resultSet.getString("pnumber").trim();
-//                String pin = resultSet.getString("pin").trim();
-//
-//                // System.out.println("\n\n");
-//                // System.out.println("fName "+fname + "lat "+lname+ "atype "+atype+ "num "+num);
-//                if (firstName.equalsIgnoreCase(fname) && lastName.equalsIgnoreCase(lname) && phoneNumber.equalsIgnoreCase(num) && accountType.equalsIgnoreCase(atype)) {
-//                    JOptionPane.showMessageDialog(null, "model.User already exit in database");
-//                    clearText();
-//
-//                } else {
-//                    Utils.getInstance().generateAccountNumber();
-//                    insertToDatabase();
-//                    clearText();
-//                }
-//            }
-//
-//
-//        } catch (SQLException ex) {
-//            Logger.getLogger(OpenAccount.class.getName()).log(Level.SEVERE, null, ex);
-//        }
-//
-//
-//    }
-
-//    public void mainPage() {
-//        setVisible(false);
-//        views.Homepage bankSystem2 = new views.Homepage();
-//        bankSystem2.setLocation(300, 100);
-//        bankSystem2.setResizable(false);
-//        bankSystem2.setSize(550, 430);
-//        bankSystem2.setVisible(true);
-//    }
-
-
-    private void saveToDatabaseVerification() {
-        String number = txtPhoneNumber.getText();
-        //verify if the user already exist in databse!!!!!!!!!!!
-        if (isFieldEmpty() && verifyPhoneNumber(number)) {
-            // userInDatabase();
-
-        }
-//         else{
-//             //save to database
-//               generateAccountNumber();
-//                    insertToDatabase();
-//                    clearText();
-//         }
-
-    }
-
-    private void clearText() {
-        txtFirstName.setText("");
-        txtLastName.setText("");
-        txtPhoneNumber.setText("");
-        txtAccountNumber.setText("");
-        txtPin.setText("");
-    }
-
     private boolean saveCopyToAmountDepositedTable(String number, String pin) {
         PreparedStatement ps;
         boolean flag;
         try {
 
             String pAmount = "0.0", aDeposited = "0.0", balance = "0.0";
-
-
             String sql = "INSERT INTO  amountdeposited(pnumber,pin,pamount,adeposited,balance)values(?,?,?,?,?)";
+
             Connection connection = DatabaseConnection.getDatabase().openConnection();
 
             ps = connection.prepareStatement(sql);
-
-
             ps.setString(1, number);
             ps.setString(2, pin);
             ps.setString(3, pAmount);
@@ -470,95 +364,17 @@ public class OpenAccount extends JFrame {
         return flag;
     }
 
-    private void insertToDatabase() {
-        PreparedStatement ps;
-        try {
-            char[] pinChar = txtPin.getPassword();
-            String fName, lastName, number, aNumber, aType, pin;
-            fName = txtFirstName.getText();
-            lastName = txtLastName.getText();
-            number = txtPhoneNumber.getText();
-            aNumber = txtAccountNumber.getText();
-            aType = jcmbAccountType.getSelectedItem().toString();
-            pin = new String(pinChar);
-
-            String sql = "INSERT INTO  accountopening(fname,lname,pnumber,anumber,atype,pin)values(?,?,?,?,?,?)";
-//            databaseConnection.open();
-//
-//            ps = databaseConnection.getConnection().prepareStatement(sql);
-//            ps.setString(1, fName);
-//            ps.setString(2, lastName);
-//            ps.setString(3, number);
-//            ps.setString(4, aNumber);
-//            ps.setString(5, aType);
-//            ps.setString(6, pin);
-            //save copy to amount deposited, number,pin,preAmount,adepost,balance
-//            boolean comfirm = saveCopyToAmountDepositedTable(number, pin);
-//            System.out.println("Comfirm " + comfirm);
-//            if (comfirm) {
-//                ps.executeUpdate();
-//
-//                JOptionPane.showMessageDialog(null, "Account Created Successfully!!!!");
-//            }
 
 
-        } catch (Exception e) {
-            //e.printStackTrace();
-            System.err.println("Error in creating account!!!!!");
-        }
-
-
-    }
-
-
-    private void comfirmUserFromDatabase(String number) {
-        try {
-            String query = "SELECT * FROM accountopening where pnumber like '" + number + "'";
-
-            ResultSet resultSet;
-            Statement statement = null;
-            Connection connection = DaoFactory.getDatabase().openConnection();
-            resultSet = statement.executeQuery(query);
-
-            if (!resultSet.next()) {
-                JOptionPane.showMessageDialog(null, "No Record found this user!!!");
-
-            } else {
-                String fname = resultSet.getString("fname").trim();
-                String lname = resultSet.getString("lname").trim();
-                String anumber = resultSet.getString("anumber").trim();
-                String atype = resultSet.getString("atype").trim();
-                String pin = resultSet.getString("pin").trim();
-
-
-                displayUserSearchResult(fname, lname, anumber, atype, pin);
-
-
-            }
-
-
-        } catch (SQLException ex) {
-            Logger.getLogger(OpenAccount.class.getName()).log(Level.SEVERE, null, ex);
-        }
-
-    }
 
     private void clearTextImpl() {
-        Utils.getInstance().clearText(txtPin, txtFirstName, txtLastName, txtPhoneNumber, txtAccountNumber, jcmbAccountType);
+        Utils.getInstance().clearTextOpenAccount(txtPin, txtFirstName,
+                txtLastName, txtPhoneNumber, txtAccountNumber, jcmbAccountType);
     }
 
-    private void displayUserSearchResult(String fname, String lname, String anumber, String atype, String pin) {
-        JOptionPane.showMessageDialog(null, "Record Found for this user ");
-        JOptionPane.showMessageDialog(null, "<html><i>  First Name : " + fname +
-                "\nLast Name :" + lname +
-                "\nAccount Number :" + anumber +
-                "\nAccount Type :" + atype +
-                "\nPin Number :" + pin);
-    }
-
-    //
     private void searchUser() {
-        String option = JOptionPane.showInputDialog(rootPane, "Enter Phone Number", "Search model.User via Phone Number", JOptionPane.DEFAULT_OPTION);
+        String option = JOptionPane.showInputDialog(rootPane,
+                "Enter Phone Number", "Search model.User via Phone Number", JOptionPane.DEFAULT_OPTION);
         try {
             if (!option.equals(JOptionPane.OK_OPTION)) {
 
@@ -576,7 +392,7 @@ public class OpenAccount extends JFrame {
                     jcmbAccountType.setSelectedItem(user.getAccountType());
                     txtPhoneNumber.setEditable(false);
                     btnSave.setText("Update");
-                    btnSave.setEnabled(false);
+                    btnSave.setEnabled(true);
                     txtPin.setEditable(false);
 
                 } else {
@@ -591,51 +407,4 @@ public class OpenAccount extends JFrame {
         } catch (Exception ex) {
             //ex.printStackTrace();
         }
-    }
-
-
-//    private void openMainPage() {
-//        setVisible(false);
-//        views.Homepage bankSystem2 = new views.Homepage();
-//        bankSystem2.setLocation(300, 100);
-//        bankSystem2.setResizable(false);
-//        bankSystem2.setSize(550, 430);
-//        bankSystem2.setVisible(true);
-//    }
-
-//    @Override
-//    public void actionPerformed(ActionEvent event) {
-//
-//        Object source = event.getSource();
-//        if (source.equals(btnBackToMain)) {
-//            // openMainPage();
-//        }
-//        if (source.equals(btnSave)) {
-//            saveToDatabaseVerification();
-//        }
-//        if (source.equals(btnSearch)) {
-    //  searchUser();
-//
-//        }
-//        if (source.equals(btnCancel)) {
-//            // mainPage();
-//        }
-//        if (source.equals(btnClear)) {
-//            clearText();
-//        }
-//
-//
-//    }
-
-}
-
-
-//try {
-//              List<User> userList =  UserController.getInstance(user).getAllUser();
-//              for (User user1: userList){
-//                  System.out.println("FName "+user1.getFirstName());
-//                  System.out.println("lName "+user1.getLastName());
-//              }
-//            } catch (SQLException e1) {
-//                e1.printStackTrace();
-//            }
+    }}

@@ -6,7 +6,6 @@ package views;/*
 
 import daoFactory.DatabaseConnection;
 import daoFactory.UserController;
-import model.User;
 import utils.Utils;
 
 import java.awt.BorderLayout;
@@ -17,13 +16,10 @@ import java.awt.HeadlessException;
 import java.awt.Image;
 import java.awt.MediaTracker;
 import java.awt.Toolkit;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
-import java.math.BigDecimal;
 import java.sql.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -56,16 +52,15 @@ public class DepositCash extends JFrame {
     private JButton btnClear;
 
     public DepositCash() throws HeadlessException {
-        //    databaseConnection.open();
 
         addWindowListener(new WindowAdapter() {
             @Override
             public void windowClosing(WindowEvent e) {
-//                                    views.Homepage bankSystem2 = new views.Homepage();
-//                                    bankSystem2.setLocation(300, 100);
-//                                    bankSystem2.setResizable(false);
-//                                    bankSystem2.setSize(550, 430);
-//                                    bankSystem2.setVisible(true);
+                setVisible(false);
+                Homepage homepage = new Homepage();
+                homepage.setSize(560, 430);
+                homepage.setResizable(false);
+                homepage.setVisible(true);
             }
         });
         displayGUI();
@@ -77,12 +72,31 @@ public class DepositCash extends JFrame {
     private void registerListener() {
         btnCheck.addActionListener(e -> {
             String result = fetchDataBaseOnPhoneNumber(txtPhoneNumber.getText());
-            System.out.println(result);
+            if (!result.equals("")) {
+                JOptionPane.showMessageDialog(this, "welcome!," + result);
+            }
 
         });
         btnSave.addActionListener(e -> {
             deposit();
         });
+        btnClear.addActionListener(e -> {
+            clearTextImpl();
+        });
+
+        btnCancel.addActionListener(e -> {
+            super.setVisible(false);
+            Homepage homepage = new Homepage();
+            homepage.setSize(560, 430);
+            homepage.setResizable(false);
+            homepage.setVisible(true);
+        });
+
+    }
+
+    private void clearTextImpl() {
+        Utils.getInstance().clearTextDeposit(txtPhoneNumber, txtFullName,
+                txtPreviousAmount, txtAmountDeposited, txtBalance);
     }
 
     private void displayGUI() {
@@ -116,7 +130,6 @@ public class DepositCash extends JFrame {
         lblPhoneNumber.setFont(new Font("Times New Roman", Font.ITALIC, 15));
 
         txtPhoneNumber = new JTextField();
-        //  txtPhoneNumber.setText("08167137007");
         txtPhoneNumber.addKeyListener(new KeyAdapter() {
             @Override
             public void keyTyped(KeyEvent ke) {
@@ -138,7 +151,6 @@ public class DepositCash extends JFrame {
 
         // btnCheck = new JButton(new ImageIcon("images//sam.gif"));
         btnCheck = new JButton("Search");
-        // btnCheck.addActionListener(this);
         jPanel.add(btnCheck).setBounds(410, 50, 50, 50);
 
 
@@ -232,64 +244,36 @@ public class DepositCash extends JFrame {
 
     }
 
-    private void setVisible() {
-        btnCancel.setEnabled(true);
-        lblFullName.setEnabled(true);
-        txtFullName.setEnabled(true);
-        lblPreviousAmount.setEnabled(true);
-        txtPreviousAmount.setEditable(false);
-        txtPreviousAmount.setEnabled(false);
-        lblAmountDeposited.setEnabled(true);
-        txtAmountDeposited.setEditable(true);
-        lblBalance.setEnabled(true);
-        txtBalance.setEditable(false);
-        btnSave.setEnabled(true);
-        btnClear.setEnabled(true);
-
-
-    }
-
-    private void clearText() {
-        txtFullName.setText("");
-        txtAmountDeposited.setText("");
-        txtPreviousAmount.setText("");
-        txtPhoneNumber.setText("");
-        txtBalance.setText("");
-    }
-
-
     private String fetchDataBaseOnPhoneNumber(String number) {
         String fullNameResult = null;
         try {
-
-
             if (number.length() == 0) {
                 JOptionPane.showMessageDialog(this, "phone number can't be empty!!!!");
+                return fullNameResult;
 
             } else if (number.length() != 11) {
                 JOptionPane.showMessageDialog(this, "Invalid phone number number!!!!");
-                //System.out.println("Invalid phone number number!!!!");
+                return fullNameResult;
             } else {
 
                 String query = "SELECT * FROM accountopening where pnumber like '" + number + "'";
-
                 Connection connection = DatabaseConnection.getDatabase().openConnection();
                 PreparedStatement pstmt = connection.prepareStatement(query);
                 ResultSet resultSet = pstmt.executeQuery();
                 if (!resultSet.next()) {
                     JOptionPane.showMessageDialog(null, "No Record found this user!!!: " + number);
-                    clearText();
-
+                    clearTextImpl();
                 } else {
                     pNumber = resultSet.getString("pnumber").trim();
                     pin = resultSet.getString("pin").trim();
                     String fname = resultSet.getString("fname").trim();
                     String lname = resultSet.getString("lname").trim();
-                    fullNameResult = lname + " " + fname;
+                    fullNameResult = fname + " " + lname;
                     txtFullName.setText(fullNameResult);
                     txtAmountDeposited.setEditable(true);
-                    txtPreviousAmount.setText(getPreviousAmount(number));
+                    txtPreviousAmount.setText(UserController.getInstance().getBalance(txtPhoneNumber.getText()));
                     btnSave.setEnabled(true);
+                    btnClear.setEnabled(true);
                 }
 
             }
@@ -321,266 +305,32 @@ public class DepositCash extends JFrame {
         return previousAmount;
 
     }
-//
 
-
-    public String returnUserAmountBasedOnPhone(String pNumber) {
-        String result;
-        String previousAmount = txtPreviousAmount.getText();
-        try {
-
-
-            // String query = "SELECT * FROM amountdeposited where pnumber like '" + pNumber + "'AND pin like '"+pin+"'";
-            String query = "SELECT * FROM amountdeposited where pnumber like '" + pNumber + "'";
-            ResultSet resultSet;
-            Connection connection = DatabaseConnection.getDatabase().openConnection();
-            PreparedStatement preparedStatement = connection.prepareStatement(query);
-            resultSet = preparedStatement.executeQuery();
-
-            if (resultSet.next()) {
-
-
-            } else {
-                String preAmount;
-                preAmount = resultSet.getString("pamount").trim();
-                //  System.out.println("Pre Amount "+preAmount);
-
-
-//                  int  preAmountInt = Integer.parseInt(preAmount);
-
-
-                // String amtDeposited = resultSet.getString("adeposited").trim();
-                // String customerBalance = resultSet.getString("balance").trim();
-
-                double preAmountDouble = Double.parseDouble(preAmount);
-
-                if (!preAmount.equals("0")) {
-
-                    double amtDepositedtDouble = Double.parseDouble(amtDeposited);
-                    double customerBalanceDouble = Double.parseDouble(customerBalance);
-
-
-//
-//
-//
-//
-                    // updateToDatabase(preAmountDouble, amtDepositedtDouble, customerBalanceDouble);
-                    clearText();
-
-                } else {
-                    System.out.println("Save to database!!!!!");
-                    //saveToDatabase();
-                    // updateToDatabase(preAmountDouble, amtDepositedtDouble, customerBalanceDouble);
-                    clearText();
-
-                }
-////
-////
-////
-            }
-
-            // }
-        } catch (Exception ex) {
-            ex.printStackTrace();
-        }
-        return preAmount;
-    }
-
-    //
-    private double balanceCompute(double previousAmount, double amountDeposited) {
-        double myResult = previousAmount + amountDeposited;
-        return myResult;
-    }
-
-    private double returnBalanceFromDatabase(String pNumber) {
-
-        try {
-            String query = "SELECT balance FROM amountdeposited where pnumber like '" + pNumber + "'";
-            Connection connection = DatabaseConnection.getDatabase().openConnection();
-            PreparedStatement preparedStatement = connection.prepareStatement(query);
-            ResultSet resultSet;
-            resultSet = preparedStatement.executeQuery();
-
-            if (resultSet.next()) {
-                String balance = resultSet.getString("balance").trim();
-                result = Double.parseDouble(balance);
-            }
-        } catch (Exception ex) {
-
-        }
-
-
-        return result;
-    }
-
-    //
-    private void saveToDatabase(String pAmount, String aDeposited, String custBalance) {
-        PreparedStatement ps;
-        try {
-
-            pAmount = txtPreviousAmount.getText();
-            aDeposited = txtAmountDeposited.getText();
-            custBalance = txtBalance.getText();
-            System.out.println("Pin!!!!" + pin);
-            System.out.println("Number " + pNumber);
-
-//
-//               ps = databaseConnection.getConnection().prepareStatement("UPDATE amountdeposited SET  pamount = ?, adeposited = ?,  balance = ? WHERE pnumber = ?");
-//
-//             ps.setString(1, String.valueOf(pAmount));
-//             ps.setString(2, String.valueOf(aDeposited));
-//             ps.setString(3, String.valueOf(custBalance));
-//             ps.setString(4, pNumber);
-//
-//
-//
-//	ps.executeUpdate();
-            JOptionPane.showMessageDialog(null, aDeposited + " Was Deposited To Your Account Successfully!!!!");
-
-            clearText();
-
-        } catch (Exception e) {
-            // e.printStackTrace();
-            System.err.println("Error in creating account!!!!!");
-        }
-
-
-    }
-
-    private void cleatText() {
-        txtAmountDeposited.setText("");
-        txtFullName.setText("");
-        txtPhoneNumber.setText("");
-        txtPreviousAmount.setText("");
-
-
-    }
-
-
-    private static void openMainPage() {
-        views.Homepage bankSystem2 = new views.Homepage();
-        bankSystem2.setLocation(300, 100);
-        bankSystem2.setResizable(false);
-        bankSystem2.setSize(550, 300);
-        bankSystem2.setVisible(true);
-    }
-
-    private void updateToDatabase(double pAmount, double pAmountDeposited) {
-        try {
-
-            String phoneNumber = txtPhoneNumber.getText();
-
-            UserController.getInstance().updateAmountDeposited(pAmount, pAmountDeposited, phoneNumber);
-
-            Icon info = new ImageIcon("images//info.jpg");
-            JOptionPane.showMessageDialog(null, "<html><i>Account Updated Successfully!!!!\nNew Balance is  "
-                    + Utils.getInstance().balanceAmountDeposited(pAmount, pAmountDeposited), "Information", JOptionPane.PLAIN_MESSAGE, info);
-
-            clearText();
-            btnCancel.setEnabled(true);
-            btnSave.setEnabled(false);
-            btnClear.setEnabled(false);
-            txtAmountDeposited.setEnabled(false);
-        } catch (Exception ex) {
-            ex.printStackTrace();
-        }
-    }
-
-
-    public static void main(String[] args) {
-        DepositCash cash = new DepositCash();
-        cash.setVisible(true);
-        cash.setSize(500, 330);
-        cash.setLocation(300, 100);
-    }
-
-//    @Override
-//    public void actionPerformed(ActionEvent event) {
-//        Object source = event.getSource();
-//        if (source.equals(btnCheck)) {
-//            String number = null, result;
-//            try {
-//
-//                number = txtPhoneNumber.getText();
-//                result = fetchDataBaseOnPhoneNumber(number);
-//                if (result != null) {
-//                    txtFullName.setText(result);
-//
-//                    setVisible();
-//                }
-//
-//
-//            } catch (Exception ex) {
-//
-//            }
-//
-//        }
-//
-//        if (source.equals(btnCancel)) {
-//            setVisible(false);
-////            OpenAccount account = new OpenAccount();
-////            account.mainPage();
-//
-//        }
-//        if (source.equals(btnClear)) {
-//            clearText();
-//            setInvisible();
-//        }
-//
-//        if (source.equals(btnSave)) {
-//
-//
-//
-//
-//
-//    }
-
-    private double sumPreviousAndAmountDeposited(double returnBalance, double parseDouble) {
-        return returnBalance + parseDouble;
-    }
 
     private void deposit() {
-       try {
+        try {
 
-            double returnBalance = returnBalanceFromDatabase(pNumber);
-            System.out.println("return Balance " + returnBalance);
             if (txtAmountDeposited.getText().matches("")) {
                 Icon error = new ImageIcon("images//error.jpg");
                 JOptionPane.showMessageDialog(null, "<html><i>Amount Deposited Can't Be Empty!!!!.", "ERROR", JOptionPane.PLAIN_MESSAGE, error);
 
 
             } else {
+                String phoneNumber = txtPhoneNumber.getText();
+                double previousAmount = Double.parseDouble(UserController.getInstance().getBalance(phoneNumber));
+                double amountDeposited = Double.parseDouble(txtAmountDeposited.getText());
+                double balance = Utils.getInstance().
+                        balanceAmountDeposited(previousAmount, amountDeposited);
+                String result = UserController.getInstance()
+                        .updateAmountDeposited(previousAmount, amountDeposited, balance, phoneNumber);
+                if (!result.equals("")) {
+                    JOptionPane.showMessageDialog(this, result);
 
-              double balance =  Utils.getInstance().balanceAmountDeposited(Double.parseDouble(txtAmountDeposited.getText()),
-                      Double.parseDouble(txtPreviousAmount.getText()));
-
-                System.out.println("balance "+balance);
-
-
-                //update the previous, amtdep,balance
-                String pAmount = txtPreviousAmount.getText();
-                if (pAmount.equals("0.00")){
-                    pAmount = "0";
-                    UserController.getInstance().updateAmountDeposited(Double.parseDouble(txtBalance.getText()),
-                            Double.parseDouble(pAmount),
-                            txtPhoneNumber.getText());
-
-                }else{
-                    UserController.getInstance().updateAmountDeposited(Double.parseDouble(txtBalance.getText()),
-                            Double.parseDouble(pAmount),
-                            txtPhoneNumber.getText());
                 }
-
             }
         } catch (Exception ex) {
-             ex.printStackTrace();
+            ex.printStackTrace();
         }
-
-
-    }
-
-    private double sumPrice(String previousAmount, String amountDeposited) {
-        return Double.parseDouble(previousAmount) + Double.parseDouble(amountDeposited);
     }
 
 }

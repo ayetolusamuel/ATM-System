@@ -36,7 +36,7 @@ public class UserController {
     public void save(User user) throws SQLException {
 
         if (user != null) {
-           UserController.getInstance().save(user);
+           mUserDaoQuery.saveUser(user);
         }
     }
 
@@ -48,8 +48,8 @@ public class UserController {
     public User findByPhoneNumber(String phoneNumber) throws SQLException{
         return mUserDaoQuery.findByPhone(phoneNumber);
     }
-    public void updateAmountDeposited(double balance,double previous, String phone) throws  SQLException{
-        mUserDaoQuery.AmountDeposited(balance,previous,phone);
+    public String updateAmountDeposited(double previousAmount,double amountDeposted,double balance, String phone) throws  SQLException{
+        return mUserDaoQuery.AmountDeposited(previousAmount,amountDeposted,balance,phone);
     }
     public String getAmountDeposited(String phoneNumber) throws SQLException{
         return mUserDaoQuery.getAmountDeposited(phoneNumber);
@@ -57,7 +57,12 @@ public class UserController {
     public String getBalance(String phoneNumber) throws SQLException{
         return mUserDaoQuery.balance(phoneNumber);
     }
-//    public void updateAmountDeposited(String phoneNumber,double previous,double amountDeposited)throws SQLException{
-//        mUserDaoQuery.updateAmountDeposited(previous,amountDeposited,phoneNumber);
-//    }
+    public String checkBalance(String phone, int pin) throws SQLException{
+        return mUserDaoQuery.checkBalance(phone,pin);
+    }
+
+    public String updateOpenAccount(String firstName,String lastName, String accountType, String phoneNumber) throws SQLException{
+        return mUserDaoQuery.updateOpenAccount(firstName,lastName,accountType,phoneNumber);
+    }
+
 }

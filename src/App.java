@@ -7,10 +7,6 @@ import views.OpenAccount;
 import javax.swing.*;
 
 public class App extends JFrame {
-//    public static void main(String[] args) {
-//        OpenAccount openAccount = new OpenAccount();
-//        openAccount.setVisible(true);
-//    }
 
 
     public static void main(String args[]) {

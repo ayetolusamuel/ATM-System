@@ -29,9 +29,8 @@ public class WindowEventHandler {
     }
 
     public void homePageWindowOpen() {
-
         Homepage homepage = new Homepage();
-        homepage.setSize(500,600);
+        homepage.setSize(560, 430);
         homepage.setResizable(false);
         homepage.setVisible(true);
     }

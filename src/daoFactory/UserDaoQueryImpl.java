@@ -21,7 +21,9 @@ public class UserDaoQueryImpl implements UserDao {
     private static final String
             GET_AMOUNT_DEPOSITED = "SELECT adeposited FROM amountdeposited WHERE pnumber = ?";
     private static final String
-            GET_BALANCE = "SELECT balance FROM amountdeposted WHERE pnumber = ?";
+            GET_BALANCE = "SELECT balance FROM amountdeposited WHERE pnumber = ?";
+private static final String
+            CHECK_BALANCE = "SELECT balance FROM amountdeposited WHERE pnumber = ? AND pin = ?";
 
     private static final String
             FIND_BY_LOGIN = "SELECT * FROM accountopening WHERE pnumber = ?";
@@ -95,7 +97,7 @@ public class UserDaoQueryImpl implements UserDao {
     }
     public String balance(String phone) throws SQLException {
         Connection connection = DatabaseConnection.getDatabase().openConnection();
-        PreparedStatement preparedStatement = connection.prepareStatement(GET_AMOUNT_DEPOSITED);
+        PreparedStatement preparedStatement = connection.prepareStatement(GET_BALANCE);
         preparedStatement.setString(1, phone);
         ResultSet resultSet = preparedStatement.executeQuery();
         if (resultSet.next()) {
@@ -104,13 +106,51 @@ public class UserDaoQueryImpl implements UserDao {
         return "No value for this customer!\nPlease register with us.";
     }
 
+    public String checkBalance(String phone, int pin) throws SQLException {
+        Connection connection = DatabaseConnection.getDatabase().openConnection();
+        PreparedStatement preparedStatement = connection.prepareStatement(CHECK_BALANCE);
 
-    public void updateAmountDeposited(double balance, double previousAmount, String phoneNumber) throws SQLException {
+        preparedStatement.setString(1, phone);
+        preparedStatement.setInt(2, pin);
+        ResultSet resultSet = preparedStatement.executeQuery();
+        if (resultSet.next()) {
+            return resultSet.getString("balance");
+        }
+        return "No value for this customer!\nPlease register with us.";
+    }
+
+
+    public String updateOpenAccount(String firstName, String lastName,String accountType, String phoneNumber) throws SQLException {
+        String update1 = "Update accountopening set fname = '"
+                + firstName+ "' where pnumber = '"
+                + phoneNumber + "'";
+        String update2 = "Update accountopening set lname = '"
+                + lastName + "' where pnumber = '"
+                + phoneNumber + "'";
+        String update3 = "Update accountopening set atype = '"
+                + accountType + "' where pnumber = '"
+                + phoneNumber + "'";
+
+
+        Connection c = DaoFactory.getDatabase().openConnection();
+
+        Statement statement = c.createStatement();
+
+        //PreparedStatement pstmt = c.prepareStatement(UPDATE, PreparedStatement.KEEP_CURRENT_RESULT);
+
+        statement.executeUpdate(update1);
+        statement.executeUpdate(update2);
+        statement.executeUpdate(update3);
+        statement.close();
+        c.close();
+        return "update successfully.";
+    }
+  public String updateAmountDeposited(double previousAmount, double amountDeposited,double balance, String phoneNumber) throws SQLException {
         String update1 = "Update amountdeposited set pamount = '"
-                + previousAmount + "' where pnumber = '"
+                + previousAmount+ "' where pnumber = '"
                 + phoneNumber + "'";
         String update2 = "Update amountdeposited set adeposited = '"
-                + Utils.getInstance().resultBalanceFromPrevious(balance,previousAmount) + "' where pnumber = '"
+                + amountDeposited + "' where pnumber = '"
                 + phoneNumber + "'";
         String update3 = "Update amountdeposited set balance = '"
                 + balance + "' where pnumber = '"
@@ -128,6 +168,7 @@ public class UserDaoQueryImpl implements UserDao {
         statement.executeUpdate(update3);
         statement.close();
         c.close();
+        return "update successfully.";
     }
 
     //
@@ -253,9 +294,8 @@ public class UserDaoQueryImpl implements UserDao {
     }
 
     @Override
-    public void AmountDeposited(double balance, double previous, String phone) throws SQLException {
-        updateAmountDeposited(balance, previous, phone);
-
+    public String AmountDeposited(double previousAmount, double amountDeposited,double balance, String phone) throws SQLException {
+        return updateAmountDeposited(previousAmount, amountDeposited,balance, phone);
     }
 
     @Override
@@ -267,6 +307,12 @@ public class UserDaoQueryImpl implements UserDao {
     public String getBalance(String phoneNumber) throws SQLException {
         return balance(phoneNumber);
     }
+
+    @Override
+    public String retrieveCustomerBalance(String phone, int pin) throws SQLException {
+        return checkBalance(phone,pin);
+    }
+
 
 
 }

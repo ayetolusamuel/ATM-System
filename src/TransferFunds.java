@@ -459,7 +459,7 @@
 ////                  updateSenderAmountDetails(sender, String.valueOf(previousAmountAfterTransfer), String.valueOf(amountToTransfer), String.valueOf(preAmountAfterTransfer));
 ////                  updateReceiverAmountDetails(receiver, String.valueOf(amountToTransfer));
 ////
-////                  clearText();
+////                  clearTextOpenAccount();
 ////              }
 ////              else{
 ////                    Icon error=new ImageIcon("images//error.jpg");
@@ -499,7 +499,7 @@
 ////      return flag;
 ////  }
 ////
-////  private void clearText(){
+////  private void clearTextOpenAccount(){
 ////       txtAmountTransfer.setText("");
 ////        txtReceiverPhone.setText("");
 ////        txtSenderPhone.setText("");
@@ -607,7 +607,7 @@
 ////             ex.printStackTrace();
 ////         }
 ////        }
-////       // clearText();
+////       // clearTextOpenAccount();
 ////         }
 ////
 ////
@@ -651,7 +651,7 @@
 ////                if (!resultSet.next()) {
 ////                    //JOptionPane.showMessageDialog(null, "No Record found this user!!!");
 ////                    System.out.println("No data for this user yet!!!!!!!!!!");
-////                    //clearText();
+////                    //clearTextOpenAccount();
 ////
 ////                } else {
 ////
@@ -806,7 +806,7 @@
 ////
 ////    JOptionPane.showMessageDialog(null, "Account Updated Successfully!!!!");
 ////    btnTransfer.setEnabled(false);
-////   // clearText();
+////   // clearTextOpenAccount();
 ////
 ////         } catch (Exception e) {
 ////             //e.printStackTrace();
@@ -889,7 +889,7 @@
 ////
 ////        }
 ////        if (source.equals(btnClear)) {
-////            clearText();
+////            clearTextOpenAccount();
 ////        }
 ////        if (source.equals(btnTransfer)) {
 ////           String senderNumber = txtSenderPhone.getText();

@@ -6,6 +6,7 @@ package views;/*
 
 import daoFactory.DaoFactory;
 import daoFactory.DatabaseConnection;
+import daoFactory.UserController;
 import listener.WindowEventHandler;
 import model.User;
 
@@ -23,6 +24,7 @@ import java.awt.event.WindowEvent;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.sql.SQLException;
 import javax.swing.*;
 
 /**
@@ -41,9 +43,11 @@ public class Homepage extends JFrame {
     private JPasswordField txtpin;
     private JTextField txtWithdraw;
     private JButton btnLogout;
+    Connection mConnection;
 
     public Homepage() {
         getGUI();
+       // mConnection = DatabaseConnection.getDatabase().openConnection();
         registerListener();
     }
 
@@ -63,11 +67,12 @@ public class Homepage extends JFrame {
             loginFirst.setVisible(true);
             loginFirst.setLocationRelativeTo(null);
             loginFirst.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+
         });
         btnCheckBalance.addActionListener(e -> {
             balancepopUp();
         });
-        btnDepositCash.addActionListener(e->{
+        btnDepositCash.addActionListener(e -> {
             setVisible(false);
             DepositCash depositCash = new DepositCash();
             depositCash.setLocationRelativeTo(null);
@@ -228,21 +233,27 @@ public class Homepage extends JFrame {
 
             // int pin = Integer.parseInt(txtpin.getText());
             try {
+                if (phoneNumber.length() == 0) {
+                    JOptionPane.showMessageDialog(this, "phone number can't be empty!");
+                    return;
+                } else if (pin.length() == 0) {
+                    JOptionPane.showMessageDialog(this, "pin can't be empty!");
+                    return;
+                } else if (pin.length() != 4) {
+                    JOptionPane.showMessageDialog(this, "Invalid!, phone number must be 4digits");
+                    return;
+                } else if (phoneNumber.length() != 11) {
+                    JOptionPane.showMessageDialog(this, "Invalid!, phone number must be 11 digits");
+                    return;
+                }
 
-
-                int pinInt = Integer.parseInt(pin);
-
-                if ((phoneNumber.length() != 0) && (pin.length() != 0)) {
-                    returnDataBasePhoneNumberPin(phoneNumber, pinInt);
-                    //System.out.println("Setonji");
-
-
-                } else {
-                    //System.out.println("Exit");
+                String result = UserController.getInstance().checkBalance(phoneNumber, Integer.parseInt(pin));
+                if (!result.equals("")){
+                    JOptionPane.showMessageDialog(this,"Your balance is: "+result);
                 }
 
             } catch (Exception ex) {
-
+                ex.printStackTrace();
             }
         }
     }
@@ -437,7 +448,7 @@ public class Homepage extends JFrame {
 
             if (!resultSet.next()) {
                 JOptionPane.showMessageDialog(null, "No Record found this user!!!");
-                //clearText();
+                //clearTextOpenAccount();
 
             } else {
                 String preAmount;

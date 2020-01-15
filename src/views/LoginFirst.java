@@ -1,19 +1,20 @@
 package views;
 
 import daoFactory.DatabaseConnection;
-import listener.WindowEventHandler;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.*;
-import java.sql.*;
-import java.io.*;
-import javax.swing.Timer;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.KeyAdapter;
+import java.awt.event.KeyEvent;
+import java.io.DataInputStream;
+import java.io.FileInputStream;
+import java.sql.Connection;
 
 public class LoginFirst extends JFrame {
     private JTextField tf = new JTextField(12);
     private JPasswordField pf = new JPasswordField(12);
-    private JPanel progressPanel;
     private JProgressBar bar;
     private Timer activityMonitor;
     private SimulatedActivity activity;
@@ -21,7 +22,6 @@ public class LoginFirst extends JFrame {
     private JPanel main;
     private int width;
     private int height;
-    private Dimension screenSize;
 
     public LoginFirst() {
 
@@ -29,7 +29,7 @@ public class LoginFirst extends JFrame {
 
         setLocationRelativeTo(null);
         Toolkit kits = Toolkit.getDefaultToolkit();
-        screenSize = kits.getScreenSize();
+        Dimension screenSize = kits.getScreenSize();
         width = screenSize.width / 3;
         height = screenSize.height / 3;
         setSize(width, height);
@@ -53,7 +53,7 @@ public class LoginFirst extends JFrame {
         JButton exit = new JButton("Exit ");
         exit.setMnemonic(KeyEvent.VK_F4);
 
-        progressPanel = new JPanel() {
+        JPanel progressPanel = new JPanel() {
             public void paintComponent(Graphics g) {
                 Toolkit kit = Toolkit.getDefaultToolkit();
                 Image img = kit.getImage("images//Gradien.jpg");
@@ -79,38 +79,36 @@ public class LoginFirst extends JFrame {
         c.add("South", progressPanel);
         activity = new SimulatedActivity(1000);
         activity.start();
-       activityMonitor = new Timer(500, new
-                ActionListener() {
-                    public void actionPerformed(ActionEvent event) {
-                        System.out.println("started....");
-                        int current = activity.getCurrent();
+        Connection connection = DatabaseConnection.getDatabase().openConnection();
+        activityMonitor = new Timer(500, event -> {
+            System.out.println("started....");
+            int current = activity.getCurrent();
 
 
 
-                        // show progress
-                        bar.setValue(current);
+            // show progress
+            bar.setValue(current);
 
-                        // check if task is completed
-                        if (current == activity.getTarget()) {
-                            activityMonitor.stop();
-                            openView();
-                            try {
-                                DataInputStream sin = new DataInputStream(new FileInputStream("images//status.dat"));
-                                String st = sin.readUTF();
-                                boolean flag = false;
-                                if (st.equals("true"))
-                                    flag = true;
-
-
-                            } catch (Exception ex) {
-                            }
-                            ;
+            // check if task is completed
+            if (current == activity.getTarget()) {
+                activityMonitor.stop();
+                openView();
+                try {
+                    DataInputStream sin = new DataInputStream(new FileInputStream("images//status.dat"));
+                    String st = sin.readUTF();
+                    boolean flag = false;
+                    if (st.equals("true"))
+                        flag = true;
 
 
-                            dispose();
-                        }
-                    }
-                });
+                } catch (Exception ex) {
+                }
+                ;
+
+
+                dispose();
+            }
+        });
         main = new JPanel() {
             @Override
             public void paintComponent(Graphics g) {
@@ -146,7 +144,6 @@ public class LoginFirst extends JFrame {
             }
 
         };
-        //im.add(changepw);
         main.setLayout(new GridBagLayout());
         GridBagConstraints cons = new GridBagConstraints();
         cons.fill = GridBagConstraints.HORIZONTAL;
