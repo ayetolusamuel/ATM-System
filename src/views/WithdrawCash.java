@@ -26,8 +26,8 @@ import java.util.logging.Logger;
  */
 public class WithdrawCash extends JFrame {
     private JPanel jPanel;
-    private JLabel lblPhoneNumber, lblFullName, lblPreviousAmount, lblAmountDeposited, lblBalance;
-    private JTextField txtPhoneNumber, txtFullName, txtPreviousAmount, txtAmountDeposited, txtBalance;
+    private JLabel lblPhoneNumber, lblFullName, lblPreviousAmount, lblAmountDeposited, lblBalance,lblPin;
+    private JTextField txtPhoneNumber, txtFullName, txtPreviousAmount, txtAmountDeposited, txtBalance,txtPin;
     private JButton btnCheck, btnSave;
     DatabaseConnection databaseConnection = new DatabaseConnection();
     private double result;
@@ -143,12 +143,12 @@ public class WithdrawCash extends JFrame {
         jPanel.add(btnCheck).setBounds(410, 50, 50, 50);
 
 
-        JLabel lblPin = new JLabel("Pin ");
+        lblPin = new JLabel("Pin ");
         jPanel.add(lblPin).setBounds(260, 50, 100, 20);
         lblPin.setForeground(Color.white);
         lblPin.setFont(new Font("Times New Roman", Font.ITALIC, 15));
 
-        JTextField txtPin = new JTextField();
+        txtPin = new JTextField();
         txtPin.setFont(new Font("Times New Roman", Font.ITALIC, 15));
         jPanel.add(txtPin).setBounds(290, 50, 50, 20);
 
